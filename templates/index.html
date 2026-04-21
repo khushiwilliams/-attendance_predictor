@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AttendIQ — Student Attendance Predictor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #090b10;
+      --surface:   #0e1117;
+      --card:      #13171f;
+      --border:    #1e2430;
+      --accent:    #4f8ef7;
+      --accent2:   #7c5ef7;
+      --glow:      rgba(79,142,247,.18);
+      --text:      #e8eaf0;
+      --muted:     #5a6278;
+      --input-bg:  #0a0d13;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      overflow-x: hidden;
+    }
+
+    /* ── animated background grid ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(79,142,247,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,142,247,.035) 1px, transparent 1px);
+      background-size: 44px 44px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── floating glow orbs ── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+      z-index: 0;
+      animation: drift 12s ease-in-out infinite alternate;
+    }
+    .orb-1 { width:420px; height:420px; background:rgba(79,142,247,.1);  top:-120px; left:-100px; animation-delay:0s; }
+    .orb-2 { width:320px; height:320px; background:rgba(124,94,247,.1);  bottom:-80px; right:-80px; animation-delay:-4s; }
+    .orb-3 { width:200px; height:200px; background:rgba(79,200,247,.07); top:50%;  left:55%; animation-delay:-8s; }
+
+    @keyframes drift {
+      from { transform: translate(0,0) scale(1); }
+      to   { transform: translate(30px, 20px) scale(1.08); }
+    }
+
+    /* ── wrapper ── */
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 560px;
+    }
+
+    /* ── header ── */
+    .header {
+      text-align: center;
+      margin-bottom: 2.2rem;
+      animation: fadeUp .6s ease both;
+    }
+    .badge {
+      display: inline-block;
+      padding: .28rem .9rem;
+      background: rgba(79,142,247,.12);
+      border: 1px solid rgba(79,142,247,.3);
+      border-radius: 99px;
+      font-size: .72rem;
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 6vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #e8eaf0 30%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: .6rem;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: .95rem;
+      font-weight: 300;
+      line-height: 1.6;
+    }
+
+    /* ── card ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.4rem 2.2rem;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.03) inset,
+        0 24px 64px rgba(0,0,0,.5),
+        0 0 80px var(--glow);
+      animation: fadeUp .7s .1s ease both;
+    }
+
+    /* ── form groups ── */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: .45rem;
+      margin-bottom: 1.1rem;
+    }
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: .78rem;
+      font-weight: 500;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    input, select {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: .72rem 1rem;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .95rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(79,142,247,.12);
+    }
+    input::placeholder { color: #2e3545; }
+
+    /* custom select arrow */
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '▾';
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+      font-size: .8rem;
+    }
+    select option { background: #13171f; }
+
+    /* ── divider ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+      margin: 1.2rem 0 1.4rem;
+      color: var(--muted);
+      font-size: .75rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── submit button ── */
+    .btn {
+      width: 100%;
+      padding: .9rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform .15s, box-shadow .2s;
+      box-shadow: 0 4px 24px rgba(79,142,247,.35);
+      margin-top: .4rem;
+    }
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,.12), transparent);
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(79,142,247,.5); }
+    .btn:hover::before { opacity: 1; }
+    .btn:active { transform: translateY(0); }
+
+    .btn-icon { margin-left: .4rem; font-style: normal; }
+
+    /* ── footer note ── */
+    .footer-note {
+      text-align: center;
+      margin-top: 1.6rem;
+      font-size: .78rem;
+      color: var(--muted);
+      animation: fadeUp .8s .2s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(18px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    @media (max-width: 480px) {
+      .form-row { grid-template-columns: 1fr; }
+      .card { padding: 1.8rem 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="wrapper">
+
+    <div class="header">
+      <div class="badge">🎓 ML-Powered</div>
+      <h1>AttendIQ</h1>
+      <p class="subtitle">Predict student attendance outcomes using machine learning.<br>Fill in the details below to get started.</p>
+    </div>
+
+    <div class="card">
+      <form action="/predict" method="POST">
+
+        <!-- Student Name -->
+        <div class="field">
+          <label for="name">Student Name</label>
+          <input type="text" id="name" name="name" placeholder="e.g. Arjun Sharma" required />
+        </div>
+
+        <div class="divider">Class Details</div>
+
+        <div class="form-row">
+          <!-- Classes Held -->
+          <div class="field">
+            <label for="classes_held">Classes Held</label>
+            <input type="number" id="classes_held" name="classes_held" min="1" max="200" placeholder="e.g. 40" required />
+          </div>
+
+          <!-- Classes Attended -->
+          <div class="field">
+            <label for="classes_attended">Classes Attended</label>
+            <input type="number" id="classes_attended" name="classes_attended" min="0" max="200" placeholder="e.g. 32" required />
+          </div>
+        </div>
+
+        <div class="divider">Lifestyle Factors</div>
+
+        <div class="form-row">
+          <!-- Study Hours -->
+          <div class="field">
+            <label for="study_hours">Study Hrs / Week</label>
+            <input type="number" id="study_hours" name="study_hours" min="0" max="100" step="0.5" placeholder="e.g. 12" required />
+          </div>
+
+          <!-- Health -->
+          <div class="field">
+            <label for="health">Health Condition</label>
+            <div class="select-wrap">
+              <select id="health" name="health" required>
+                <option value="" disabled selected>Select…</option>
+                <option value="Good">Good</option>
+                <option value="Average">Average</option>
+                <option value="Poor">Poor</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn">
+          Predict Attendance <em class="btn-icon">→</em>
+        </button>
+
+      </form>
+    </div>
+
+    <p class="footer-note">Powered by RandomForest · Built with Flask &amp; scikit-learn</p>
+
+  </div>
+
+</body>
+</html>

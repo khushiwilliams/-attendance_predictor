@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AttendIQ — Result</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #090b10;
+      --card:    #13171f;
+      --border:  #1e2430;
+      --accent:  #4f8ef7;
+      --accent2: #7c5ef7;
+      --glow:    rgba(79,142,247,.18);
+      --text:    #e8eaf0;
+      --muted:   #5a6278;
+
+      --low-color:  #ef4444;
+      --low-glow:   rgba(239,68,68,.2);
+      --med-color:  #f59e0b;
+      --med-glow:   rgba(245,158,11,.2);
+      --high-color: #10b981;
+      --high-glow:  rgba(16,185,129,.2);
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(79,142,247,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,142,247,.03) 1px, transparent 1px);
+      background-size: 44px 44px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 { width:400px;height:400px;background:rgba(79,142,247,.08); top:-100px;left:-100px; }
+    .orb-2 { width:300px;height:300px;background:rgba(124,94,247,.08); bottom:-60px;right:-60px; }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 580px;
+    }
+
+    /* ── hero result block ── */
+    .result-hero {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.4rem 2.2rem 2rem;
+      text-align: center;
+      box-shadow: 0 24px 64px rgba(0,0,0,.5), 0 0 80px var(--glow);
+      animation: fadeUp .5s ease both;
+      margin-bottom: 1.2rem;
+    }
+
+    .greeting {
+      font-size: .82rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-bottom: .3rem;
+    }
+    .student-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #e8eaf0, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1.8rem;
+    }
+
+    /* attendance % ring */
+    .ring-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.6rem;
+    }
+    .ring {
+      position: relative;
+      width: 148px;
+      height: 148px;
+    }
+    .ring svg { transform: rotate(-90deg); }
+    .ring-track { fill:none; stroke:#1e2430; stroke-width:10; }
+    .ring-fill  { fill:none; stroke-width:10; stroke-linecap:round;
+                  stroke-dasharray: 408; stroke-dashoffset: 408;
+                  transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);
+                  animation: fillRing 1.2s .3s cubic-bezier(.4,0,.2,1) forwards; }
+    @keyframes fillRing {
+      to { stroke-dashoffset: var(--offset); }
+    }
+    .ring-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .ring-pct {
+      font-family: 'Syne', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .ring-label { font-size: .72rem; color: var(--muted); margin-top:.2rem; }
+
+    /* prediction badge */
+    .pred-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .5rem 1.4rem;
+      border-radius: 99px;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      border: 1.5px solid;
+      margin-bottom: 1rem;
+    }
+    .pred-badge.low  { color:var(--low-color);  border-color:var(--low-color);  background:var(--low-glow); }
+    .pred-badge.medium { color:var(--med-color); border-color:var(--med-color); background:var(--med-glow); }
+    .pred-badge.high { color:var(--high-color); border-color:var(--high-color); background:var(--high-glow); }
+
+    .confidence {
+      font-size: .82rem;
+      color: var(--muted);
+      margin-bottom: 1.4rem;
+    }
+
+    .advice-box {
+      background: rgba(79,142,247,.06);
+      border: 1px solid rgba(79,142,247,.15);
+      border-radius: 12px;
+      padding: 1rem 1.2rem;
+      font-size: .9rem;
+      color: #a0aec0;
+      line-height: 1.6;
+      text-align: left;
+    }
+
+    /* ── stats grid ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .9rem;
+      animation: fadeUp .6s .15s ease both;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.1rem .9rem;
+      text-align: center;
+    }
+    .stat-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--accent);
+      display: block;
+    }
+    .stat-label {
+      font-size: .72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-top: .25rem;
+    }
+
+    /* ── probability bars ── */
+    .proba-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.4rem 1.6rem;
+      margin-top: 1.2rem;
+      animation: fadeUp .7s .2s ease both;
+    }
+    .proba-title {
+      font-family: 'Syne', sans-serif;
+      font-size: .78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+      margin-bottom: .75rem;
+    }
+    .bar-row:last-child { margin-bottom: 0; }
+    .bar-name {
+      width: 58px;
+      font-size: .8rem;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .bar-track {
+      flex: 1;
+      height: 7px;
+      background: #1a1f2b;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      width: 0;
+      animation: barIn .9s .5s ease forwards;
+    }
+    @keyframes barIn { to { width: var(--w); } }
+    .bar-fill.low  { background: var(--low-color); }
+    .bar-fill.med  { background: var(--med-color); }
+    .bar-fill.high { background: var(--high-color); }
+    .bar-pct {
+      font-size: .8rem;
+      color: var(--muted);
+      width: 38px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* ── back button ── */
+    .back-btn {
+      display: block;
+      width: 100%;
+      margin-top: 1.2rem;
+      padding: .8rem;
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      font-family: 'Syne', sans-serif;
+      font-size: .9rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      transition: border-color .2s, color .2s;
+      animation: fadeUp .8s .25s ease both;
+    }
+    .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(16px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    @media (max-width: 440px) {
+      .result-hero { padding: 1.8rem 1.3rem 1.6rem; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="wrapper">
+
+    <!-- ── HERO ── -->
+    <div class="result-hero">
+      <p class="greeting">Prediction for</p>
+      <p class="student-name">{{ name }}</p>
+
+      <!-- ring: offset = 408 * (1 - pct/100) -->
+      {% set offset = (408 * (1 - attendance_pct / 100)) | round(2) %}
+      {% if label_class == 'high' %}
+        {% set ring_color = '#10b981' %}
+      {% elif label_class == 'medium' %}
+        {% set ring_color = '#f59e0b' %}
+      {% else %}
+        {% set ring_color = '#ef4444' %}
+      {% endif %}
+
+      <div class="ring-wrap">
+        <div class="ring">
+          <svg viewBox="0 0 148 148" width="148" height="148">
+            <circle class="ring-track" cx="74" cy="74" r="65"/>
+            <circle class="ring-fill" cx="74" cy="74" r="65"
+                    stroke="{{ ring_color }}"
+                    style="--offset:{{ offset }}"/>
+          </svg>
+          <div class="ring-center">
+            <span class="ring-pct" style="color:{{ ring_color }}">{{ attendance_pct }}%</span>
+            <span class="ring-label">attendance</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pred-badge {{ label_class }}">{{ emoji }} {{ label }} Attendance</div>
+      <p class="confidence">Model confidence: <strong>{{ confidence }}%</strong></p>
+
+      <div class="advice-box">💡 {{ advice }}</div>
+    </div>
+
+    <!-- ── STATS ── -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-value">{{ classes_held }}</span>
+        <span class="stat-label">Classes Held</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ classes_att }}</span>
+        <span class="stat-label">Attended</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ study_hours }}h</span>
+        <span class="stat-label">Study / Week</span>
+      </div>
+    </div>
+
+    <!-- ── PROBABILITY BARS ── -->
+    <div class="proba-card">
+      <p class="proba-title">Prediction Probabilities</p>
+
+      <div class="bar-row">
+        <span class="bar-name" style="color:#ef4444">Low</span>
+        <div class="bar-track">
+          <div class="bar-fill low" style="--w:{{ prob_low }}%"></div>
+        </div>
+        <span class="bar-pct">{{ prob_low }}%</span>
+      </div>
+
+      <div class="bar-row">
+        <span class="bar-name" style="color:#f59e0b">Medium</span>
+        <div class="bar-track">
+          <div class="bar-fill med" style="--w:{{ prob_med }}%"></div>
+        </div>
+        <span class="bar-pct">{{ prob_med }}%</span>
+      </div>
+
+      <div class="bar-row">
+        <span class="bar-name" style="color:#10b981">High</span>
+        <div class="bar-track">
+          <div class="bar-fill high" style="--w:{{ prob_high }}%"></div>
+        </div>
+        <span class="bar-pct">{{ prob_high }}%</span>
+      </div>
+    </div>
+
+    <a href="/" class="back-btn">← Predict Another Student</a>
+
+  </div>
+
+</body>
+</html>
